@@ -1,7 +1,19 @@
-package ru.practicum.shareit.request;
+package ru.yandex.practicum.request;
 
-/**
- * TODO Sprint add-item-requests.
- */
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class ItemRequest {
+    private Long id;
+    private String description;
+    private Long requestorID;
+    private LocalDateTime created;
 }
