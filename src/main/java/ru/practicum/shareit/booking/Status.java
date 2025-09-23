@@ -1,4 +1,4 @@
-package ru.yandex.practicum.booking;
+package ru.practicum.shareit.booking;
 
 public enum Status {
 

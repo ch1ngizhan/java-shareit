@@ -1,6 +1,7 @@
-package ru.yandex.practicum.user.storage;
+package ru.practicum.shareit.user.storage;
 
-import ru.yandex.practicum.user.model.User;
+
+import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
 import java.util.Optional;

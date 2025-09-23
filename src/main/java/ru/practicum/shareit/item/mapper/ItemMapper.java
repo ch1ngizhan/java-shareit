@@ -1,10 +1,10 @@
-package ru.yandex.practicum.item.mapper;
+package ru.practicum.shareit.item.mapper;
 
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.item.model.Item;
-import ru.yandex.practicum.item.model.ItemDto;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.model.ItemDto;
 
 
 @Slf4j

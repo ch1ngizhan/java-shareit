@@ -1,8 +1,8 @@
-package ru.yandex.practicum.item.storage;
+package ru.practicum.shareit.item.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.item.model.Item;
+import ru.practicum.shareit.item.model.Item;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,9 +23,7 @@ public class ItemRepository implements ItemStorage {
 
     @Override
     public void delete(Long id) {
-        if (items.containsKey(id)) {
-            items.remove(id);
-        }
+        items.remove(id);
     }
 
     @Override
@@ -36,9 +34,7 @@ public class ItemRepository implements ItemStorage {
 
     @Override
     public Optional<Item> getItemById(Long itemId) {
-        return items.values().stream()
-                .filter(item -> item.getId().equals(itemId))
-                .findFirst();
+        return Optional.ofNullable(items.get(itemId));
     }
 
     @Override
@@ -51,19 +47,13 @@ public class ItemRepository implements ItemStorage {
 
     @Override
     public Collection<Item> search(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        String searchText = text.toLowerCase();
-
         return items.values().stream()
                 .filter(Item::getAvailable)
                 .filter(item -> {
                     String name = item.getName();
                     String description = item.getDescription();
-                    return (name != null && name.toLowerCase().contains(searchText)) ||
-                            (description != null && description.toLowerCase().contains(searchText));
+                    return (name != null && name.toLowerCase().contains(text)) ||
+                            (description != null && description.toLowerCase().contains(text));
                 })
                 .collect(Collectors.toList());
     }

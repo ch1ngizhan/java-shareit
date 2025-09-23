@@ -1,4 +1,4 @@
-package ru.yandex.practicum.item.model;
+package ru.practicum.shareit.item.model;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

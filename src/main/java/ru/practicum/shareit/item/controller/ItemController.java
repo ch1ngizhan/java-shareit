@@ -1,12 +1,12 @@
-package ru.yandex.practicum.item.controller;
+package ru.practicum.shareit.item.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.item.model.ItemDto;
-import ru.yandex.practicum.item.service.ItemService;
+import ru.practicum.shareit.item.model.ItemDto;
+import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collection;
 
@@ -37,8 +37,9 @@ public class ItemController {
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> delete(@PathVariable Long itemId) {
-        itemService.delete(itemId);
+    public ResponseEntity<Void> delete(@RequestHeader(USER_HEADER) Long userId,
+                                       @PathVariable Long itemId) {
+        itemService.delete(itemId, userId);
         log.info("ItemController: вещ с id: {} удалёна", itemId);
         return ResponseEntity.noContent().build();
     }

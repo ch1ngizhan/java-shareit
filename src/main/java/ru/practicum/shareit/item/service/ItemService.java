@@ -1,13 +1,13 @@
-package ru.yandex.practicum.item.service;
+package ru.practicum.shareit.item.service;
 
-import ru.yandex.practicum.item.model.ItemDto;
+import ru.practicum.shareit.item.model.ItemDto;
 
 import java.util.Collection;
 
 public interface ItemService {
     ItemDto create(ItemDto item, Long owner);
 
-    void delete(Long id);
+    void delete(Long id, Long userid);
 
     ItemDto update(Long userId, ItemDto itemDto, Long itemId);
 

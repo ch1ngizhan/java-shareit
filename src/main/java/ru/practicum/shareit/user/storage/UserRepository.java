@@ -1,8 +1,8 @@
-package ru.yandex.practicum.user.storage;
+package ru.practicum.shareit.user.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.user.model.User;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
 
@@ -33,10 +33,8 @@ public class UserRepository implements UserStorage {
     }
 
     @Override
-    public Optional<User> getUserById(Long itemId) {
-        return users.values().stream()
-                .filter(item -> item.getId().equals(itemId))
-                .findFirst();
+    public Optional<User> getUserById(Long userId) {
+        return Optional.ofNullable(users.get(userId));
     }
 
     @Override

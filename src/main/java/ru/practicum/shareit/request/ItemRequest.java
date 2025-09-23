@@ -1,4 +1,4 @@
-package ru.yandex.practicum.request;
+package ru.practicum.shareit.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

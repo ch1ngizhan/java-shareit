@@ -1,9 +1,10 @@
-package ru.yandex.practicum.user.mapper;
+package ru.practicum.shareit.user.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.user.model.User;
-import ru.yandex.practicum.user.model.UserDto;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.model.UserDto;
+
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {

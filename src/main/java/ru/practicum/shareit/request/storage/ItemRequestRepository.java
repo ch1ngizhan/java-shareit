@@ -1,7 +1,7 @@
-package ru.yandex.practicum.request.storage;
+package ru.practicum.shareit.request.storage;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequest;
 
 import java.util.Collection;
 import java.util.HashMap;

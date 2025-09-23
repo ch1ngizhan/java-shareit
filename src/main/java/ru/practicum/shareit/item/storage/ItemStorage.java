@@ -1,7 +1,7 @@
-package ru.yandex.practicum.item.storage;
+package ru.practicum.shareit.item.storage;
 
 
-import ru.yandex.practicum.item.model.Item;
+import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
 import java.util.Optional;

@@ -1,6 +1,7 @@
-package ru.yandex.practicum.request.storage;
+package ru.practicum.shareit.request.storage;
 
-import ru.yandex.practicum.request.ItemRequest;
+
+import ru.practicum.shareit.request.ItemRequest;
 
 import java.util.Collection;
 

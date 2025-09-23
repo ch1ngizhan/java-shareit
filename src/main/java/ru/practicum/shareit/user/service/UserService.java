@@ -1,6 +1,7 @@
-package ru.yandex.practicum.user.service;
+package ru.practicum.shareit.user.service;
 
-import ru.yandex.practicum.user.model.UserDto;
+
+import ru.practicum.shareit.user.model.UserDto;
 
 import java.util.Collection;
 

@@ -1,12 +1,12 @@
-package ru.yandex.practicum.user.controller;
+package ru.practicum.shareit.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.user.model.UserDto;
-import ru.yandex.practicum.user.service.UserService;
+import ru.practicum.shareit.user.model.UserDto;
+import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collection;
 
