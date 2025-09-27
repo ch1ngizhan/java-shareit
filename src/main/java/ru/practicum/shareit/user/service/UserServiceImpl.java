@@ -4,6 +4,7 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.NotUniqueEmailException;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -18,9 +19,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserStorage userStorage;
-
+    @Transactional
     @Override
     public UserDto create(UserDto userDto) {
         log.info("Создание нового пользователя: email={}, name={}",
@@ -30,7 +32,7 @@ public class UserServiceImpl implements UserService {
         validateEmailUniqueness(userDto.getEmail());
 
         User user = UserMapper.toUser(userDto);
-        User createdUser = userStorage.create(user);
+        User createdUser = userStorage.save(user);
 
         log.debug("Пользователь успешно создан: ID={}, email={}",
                 createdUser.getId(), createdUser.getEmail());
@@ -38,21 +40,16 @@ public class UserServiceImpl implements UserService {
 
         return UserMapper.toUserDto(createdUser);
     }
-
+    @Transactional
     @Override
     public void delete(Long id) {
         log.info("Запрос на удаление пользователя с ID: {}", id);
-
-        if (userStorage.getUserById(id).isEmpty()) {
-            log.warn("Попытка удаления несуществующего пользователя с ID: {}", id);
-            throw new NotFoundException("Пользователь с id " + id + " не найден");
-        }
-
-        userStorage.delete(id);
+        User user = getUserOrThrow(id);
+        userStorage.delete(user);
         log.debug("Пользователь с ID: {} успешно удален", id);
         log.info("Удаление пользователя с ID: {} завершено", id);
     }
-
+    @Transactional
     @Override
     public UserDto update(Long id, UserDto userDto) {
         log.info("Запрос на обновление пользователя с ID: {}", id);
@@ -87,7 +84,7 @@ public class UserServiceImpl implements UserService {
             log.warn("Попытка установить пустой email для пользователя ID: {}", id);
         }
 
-        User updatedUser = userStorage.update(user);
+        User updatedUser = userStorage.save(user);
         log.debug("Пользователь с ID: {} успешно обновлен", id);
         log.info("Обновление пользователя с ID: {} завершено", id);
 
@@ -103,11 +100,11 @@ public class UserServiceImpl implements UserService {
         log.info("Пользователь с ID: {} успешно получен", id);
         return UserMapper.toUserDto(user);
     }
-
+    @Transactional
     @Override
     public Collection<UserDto> getAllUsers() {
         log.info("Запрос всех пользователей");
-        Collection<User> users = userStorage.getAllUsers();
+        Collection<User> users = userStorage.findAll();
         log.debug("Найдено {} пользователей", users.size());
         log.info("Список всех пользователей успешно получен (количество: {})", users.size());
         return users.stream()
@@ -117,10 +114,8 @@ public class UserServiceImpl implements UserService {
 
     private void validateEmailUniqueness(String email) {
         log.debug("Проверка уникальности email: {}", email);
-        Optional<User> existingUser = userStorage.getUserByEmail(email);
-        if (existingUser.isPresent()) {
-            log.warn("Попытка использовать уже существующий email: {}. Существующий пользователь ID: {}",
-                    email, existingUser.get().getId());
+        if (userStorage.existsByEmail(email)) {
+            log.warn("Попытка использовать уже существующий email.");
             throw new NotUniqueEmailException("Пользователь с электронной почтой " + email + " уже существует");
         }
         log.debug("Email {} уникален", email);
@@ -128,7 +123,7 @@ public class UserServiceImpl implements UserService {
 
     private User getUserOrThrow(Long id) {
         log.debug("Поиск пользователя по ID: {}", id);
-        return userStorage.getUserById(id)
+        return userStorage.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Пользователь с ID: {} не найден", id);
                     return new NotFoundException("Пользователь с id " + id + " не найдена");

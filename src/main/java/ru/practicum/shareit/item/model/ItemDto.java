@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.request.ItemRequest;
 
 @Builder
 @AllArgsConstructor
@@ -19,7 +20,7 @@ public class ItemDto {
     private String description;
     @NotNull
     private Boolean available;
-    private Long request;
+    private ItemRequest request;
 
 
 }
