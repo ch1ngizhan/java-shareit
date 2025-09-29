@@ -30,7 +30,6 @@ public class ItemRequestRepository implements ItemRequestStorage {
 
     @Override
     public ItemRequest getItemRequestById(Long id) {
-
         return itemRequests.get(id);
     }
 

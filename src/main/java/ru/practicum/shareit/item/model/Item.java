@@ -2,8 +2,11 @@ package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
 
 
 @AllArgsConstructor
@@ -32,10 +35,10 @@ public class Item {
     @EqualsAndHashCode.Exclude
     private ItemRequest request;
 
-    public Item (String name, String description, Boolean available) {
-        this.name = name;
-        this.description = description;
-        this.available = available;
-    }
+    @OneToMany(mappedBy = "item")
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "item")
+    private List<Comment> comments;
 
 }

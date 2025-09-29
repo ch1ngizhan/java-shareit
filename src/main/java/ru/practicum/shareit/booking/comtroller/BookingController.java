@@ -1,4 +1,54 @@
 package ru.practicum.shareit.booking.comtroller;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.model.BookingDto;
+import ru.practicum.shareit.booking.service.BookingService;
+
+import java.util.List;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/bookings")
 public class BookingController {
+
+    private final BookingService bookingService;
+
+    public static final String USER_ID_HEADER = "X-Sharer-User-Id";
+
+    @PostMapping
+    public BookingDto create(@RequestHeader(USER_ID_HEADER) Long bookerId,
+                             @Valid @RequestBody BookingDto bookingDto) {
+        return bookingService.create(bookerId, bookingDto);
+    }
+
+    @PatchMapping("/{bookingId}")
+    public BookingDto update(@PathVariable Long bookingId,
+                             @RequestParam boolean approved,
+                             @RequestHeader(USER_ID_HEADER) Long ownerId) {
+        return bookingService.update(ownerId, approved, bookingId);
+    }
+
+    @GetMapping("/{bookingId}")
+    public BookingDto getBooking(@PathVariable Long bookingId,
+                                 @RequestHeader(USER_ID_HEADER) Long userId) {
+        return bookingService.getBooking(userId, bookingId);
+    }
+
+    @GetMapping("/owner")
+    public List<BookingDto> getBookingsByOwner(
+            @RequestHeader(USER_ID_HEADER) Long userId,
+            @RequestParam(defaultValue = "ALL") String state) {
+        return bookingService.getBookingsByOwner(userId, state);
+
+    }
+
+    @GetMapping
+    public List<BookingDto> getBookingsByUser(@RequestHeader(USER_ID_HEADER) Long userId,
+                                              @RequestParam(defaultValue = "ALL") String state) {
+        return bookingService.getBookingsByUser(userId, state);
+    }
 }

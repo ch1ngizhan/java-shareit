@@ -5,16 +5,24 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Status;
+import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemDto;
+import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.storage.UserStorage;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -26,13 +34,15 @@ import java.util.stream.Collectors;
 @Transactional
 public class ItemServiceImpl implements ItemService {
     private final ItemStorage itemStorage;
-    private final UserService userService;
+    private final UserStorage userStorage;
+    private final BookingStorage bookingStorage;
+    private final CommentRepository commentRepository;
 
     @Transactional
     @Override
     public ItemDto create(ItemDto newItem, Long ownerId) {
         log.info("Создание новой вещи пользователем с ID: {}", ownerId);
-        User owner = UserMapper.toUser(userService.getUserById(ownerId));
+        User owner = getUserOrThrow(ownerId);
 
         if (newItem == null) {
             log.warn("Попытка создания вещи с null данными от пользователя: {}", owner);
@@ -48,7 +58,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public void delete(Long itemId, Long userId) {
-        userService.getUserById(userId);
+        getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
         validateItemOwnership(item, userId);
         log.info("Удаление вещи с ID: {}", itemId);
@@ -96,7 +106,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<ItemDto> getAllItems(Long userId) {
         log.info("Запрос всех вещей пользователя с ID: {}", userId);
-        userService.getUserById(userId);
+        getUserOrThrow(userId);
         Collection<Item> items = itemStorage.findByOwnerId(userId);
         log.debug("Найдено {} вещей для пользователя с ID: {}", items.size(), userId);
         return items.stream()
@@ -119,6 +129,18 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
+        User user = getUserOrThrow(userId);
+        Item item = getItemOrThrow(itemId);
+        if (bookingStorage.existsApprovedBooking(itemId,userId, Status.APPROVED)){
+            throw new IllegalArgumentException("");
+        }
+        Comment comment = CommentMapper.toComment(commentDto,user,item);
+        comment.setCreated(LocalDateTime.now());
+        return CommentMapper.toCommentDto(commentRepository.save(comment));
+    }
+
     private Item getItemOrThrow(Long id) {
         log.debug("Поиск вещи с ID: {}", id);
         return itemStorage.findById(id)
@@ -133,5 +155,13 @@ public class ItemServiceImpl implements ItemService {
             log.warn("Пользователь с ID: {} не является владельцем вещи с ID: {}", userId, item.getId());
             throw new AccessDeniedException("Пользователь не является владельцем вещи.");
         }
+    }
+    private User getUserOrThrow(Long id) {
+        log.debug("Поиск пользователя по ID: {}", id);
+        return userStorage.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Пользователь с ID: {} не найден", id);
+                    return new NotFoundException("Пользователь с id " + id + " не найдена");
+                });
     }
 }

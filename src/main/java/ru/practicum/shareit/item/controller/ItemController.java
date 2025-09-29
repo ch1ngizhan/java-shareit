@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -64,5 +65,10 @@ public class ItemController {
                                                            @RequestParam(name = "text") String text) {
         log.info("GET Запрос на поиск предметов");
         return ResponseEntity.ok(itemService.search(text));
+    }
+    @PostMapping("/{itemId}/comment")
+    public CommentDto createComment(@RequestHeader(USER_HEADER) Long userId, @PathVariable Long itemId,
+                                    @Valid @RequestBody CommentDto commentDto) {
+        return itemService.createComment(userId, itemId, commentDto);
     }
 }
