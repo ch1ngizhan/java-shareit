@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking.comtroller;
+package ru.practicum.shareit.booking.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public BookingOut update(@PathVariable Long bookingId,
-                             @RequestParam boolean approved,
+                             @RequestParam(name = "approved", required = true) boolean approved,
                              @RequestHeader(USER_ID_HEADER) Long ownerId) {
         return bookingService.update(ownerId, approved, bookingId);
     }
