@@ -34,11 +34,11 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
-        log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemid());
-        if (bookingDto.getItemid() == null) {
+        log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
+        if (bookingDto.getItemId() == null) {
             throw new NotFoundException("null");
         }
-        Item item = getItemOrThrow(bookingDto.getItemid());
+        Item item = getItemOrThrow(bookingDto.getItemId());
 
         if (!item.getAvailable()) {
             log.warn("Вещь ID={} недоступна для бронирования", item.getId());

@@ -23,7 +23,7 @@ public class BookingDto {
     private Long booker;
 
     @NotNull(message = "Item ID cannot be null")
-    private Long itemid;
+    private Long itemId;
 
     private Status status;
 }

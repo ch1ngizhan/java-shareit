@@ -23,6 +23,9 @@ public class BookingController {
     @PostMapping
     public BookingOut create(@RequestHeader(USER_ID_HEADER) Long bookerId,
                              @Valid @RequestBody BookingDto bookingDto) {
+        log.info("POST /bookings - bookerId: {}, bookingDto: {}", bookerId, bookingDto);
+        log.debug("Booking details - start: {}, end: {}, itemid: {}",
+                bookingDto.getStart(), bookingDto.getEnd(), bookingDto.getItemId());
         return bookingService.create(bookerId, bookingDto);
     }
 
