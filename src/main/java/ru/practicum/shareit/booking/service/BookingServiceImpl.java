@@ -36,12 +36,12 @@ public class BookingServiceImpl implements BookingService {
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
         if (bookingDto.getItemId() == null) {
-            throw new NotFoundException("null");
+            throw new NotFoundException("Item ID cannot be null");
         }
         Item item = getItemOrThrow(bookingDto.getItemId());
 
-        if (!item.getAvailable()) {
-            log.warn("Вещь ID={} недоступна для бронирования", item.getId());
+        if (item.getAvailable() == null || !item.getAvailable()) {
+            log.warn("Вещь ID={} недоступна для бронирования. Available: {}", item.getId(), item.getAvailable());
             throw new IllegalArgumentException("Item is not available");
         }
 

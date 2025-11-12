@@ -36,6 +36,9 @@ public class BookingMapper {
     }
 
     public static BookingOut toBookingOut(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
         BookingOut dto = new BookingOut();
         dto.setId(booking.getId());
         dto.setStart(booking.getStart());

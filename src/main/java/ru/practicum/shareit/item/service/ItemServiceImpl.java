@@ -45,15 +45,37 @@ public class ItemServiceImpl implements ItemService {
         User owner = getUserOrThrow(ownerId);
 
         if (newItem == null) {
-            log.warn("Попытка создания вещи с null данными от пользователя: {}", owner);
             throw new ValidationException("Item не должен быть равен null");
         }
 
+
+        log.debug("BEFORE MAPPING - Incoming ItemDto - name: {}, description: {}, available: {}",
+                newItem.getName(), newItem.getDescription(), newItem.getAvailable());
+
+
+        if (newItem.getAvailable() == null) {
+            log.warn("Available is null in incoming DTO, setting to false");
+            newItem.setAvailable(false);
+        }
+
         Item item = ItemMapper.toItem(newItem);
+
+
+        if (item.getAvailable() == null) {
+            log.error("CRITICAL: Item available is still null after mapping! Forcing to false.");
+            item.setAvailable(false);
+        }
+
+
+        log.debug("AFTER MAPPING - Item available: {}", item.getAvailable());
+
         item.setOwner(owner);
-        itemStorage.save(item);
-        log.debug("Вещь создана: ID={}, название='{}'", item.getId(), item.getName());
-        return ItemMapper.toItemDto(item);
+        Item savedItem = itemStorage.save(item);
+
+
+        log.debug("AFTER SAVE - Saved Item available: {}", savedItem.getAvailable());
+
+        return ItemMapper.toItemDto(savedItem);
     }
     @Transactional
     @Override
@@ -109,8 +131,8 @@ public class ItemServiceImpl implements ItemService {
         Booking nextBooking = bookingStorage.findFirstByItemIdAndStartAfterOrderByStartAsc(itemId, now)
                 .orElse(null);
         return ItemMapper.toItemWithComment(item,
-                lastBooking != null ? BookingMapper.toBookingDto(lastBooking) : null,
-                nextBooking != null ? BookingMapper.toBookingDto(nextBooking) : null,
+                lastBooking != null ? BookingMapper.toBookingOut(lastBooking) : null,
+                nextBooking != null ? BookingMapper.toBookingOut(nextBooking) : null,
                 commentsDto);
     }
     @Transactional
