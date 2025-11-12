@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingDto;
+import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
@@ -32,9 +33,13 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     @Override
-    public BookingDto create(Long bookerId, BookingDto bookingDto) {
-        log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItem().getId());
-        Item item = getItemOrThrow(bookingDto.getItem().getId());
+    public BookingOut create(Long bookerId, BookingDto bookingDto) {
+        log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemid());
+        if (bookingDto.getItemid() == null) {
+            throw new NotFoundException("null");
+        }
+        Item item = getItemOrThrow(bookingDto.getItemid());
+
         if (!item.getAvailable()) {
             log.warn("Вещь ID={} недоступна для бронирования", item.getId());
             throw new IllegalArgumentException("Item is not available");
@@ -44,12 +49,12 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = BookingMapper.toBooking(bookingDto, item, user);
         bookingStorage.save(booking);
         log.info("Бронирование ID={} успешно создано", booking.getId());
-        return BookingMapper.toBookingDto(booking);
+        return BookingMapper.toBookingOut(booking);
     }
 
     @Transactional
     @Override
-    public BookingDto update(Long ownerId, Boolean approved, Long bookingId) {
+    public BookingOut update(Long ownerId, Boolean approved, Long bookingId) {
         log.info("Обновление бронирования ID={} пользователем ID={} с approved={}", bookingId, ownerId, approved);
         Booking booking = getBookingOrThrow(bookingId);
 
@@ -61,11 +66,11 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
         bookingStorage.save(booking);
         log.info("Бронирование ID={} обновлено. Новый статус={}", bookingId, booking.getStatus());
-        return BookingMapper.toBookingDto(booking);
+        return BookingMapper.toBookingOut(booking);
     }
 
     @Override
-    public BookingDto getBooking(Long userId, Long bookingId) {
+    public BookingOut getBooking(Long userId, Long bookingId) {
         log.info("Получение бронирования ID={} пользователем ID={}", bookingId, userId);
         Booking booking = getBookingOrThrow(bookingId);
 
@@ -75,19 +80,19 @@ public class BookingServiceImpl implements BookingService {
         }
 
         log.info("Бронирование ID={} возвращено пользователю ID={}", bookingId, userId);
-        return BookingMapper.toBookingDto(booking);
+        return BookingMapper.toBookingOut(booking);
     }
 
     @Override
-    public List<BookingDto> getBookingsByUser(Long userId, String state) {
+    public List<BookingOut> getBookingsByUser(Long userId, String state) {
         log.info("Получение всех бронирований пользователя ID={} с фильтром state={}", userId, state);
         getUserOrThrow(userId);
         LocalDateTime now = LocalDateTime.now();
 
-        List<BookingDto> result = bookingStorage.findByBookerIdOrderByStartDesc(userId)
+        List<BookingOut> result = bookingStorage.findByBookerIdOrderByStartDesc(userId)
                 .stream()
                 .filter(booking -> filterByState(booking, state, now))
-                .map(BookingMapper::toBookingDto)
+                .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
 
         log.info("Найдено {} бронирований для пользователя ID={} с фильтром state={}", result.size(), userId, state);
@@ -95,15 +100,15 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookingsByOwner(Long ownerId, String state) {
+    public List<BookingOut> getBookingsByOwner(Long ownerId, String state) {
         log.info("Получение всех бронирований владельца ID={} с фильтром state={}", ownerId, state);
         getUserOrThrow(ownerId);
         LocalDateTime now = LocalDateTime.now();
 
-        List<BookingDto> result = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(ownerId)
+        List<BookingOut> result = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(ownerId)
                 .stream()
                 .filter(booking -> filterByState(booking, state, now))
-                .map(BookingMapper::toBookingDto)
+                .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
 
         log.info("Найдено {} бронирований для владельца ID={} с фильтром state={}", result.size(), ownerId, state);

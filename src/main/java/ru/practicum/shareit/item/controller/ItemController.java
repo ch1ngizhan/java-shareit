@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
+import ru.practicum.shareit.item.model.ItemWithComment;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collection;
@@ -53,11 +54,11 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemDto> getUserById(@RequestHeader(USER_HEADER) Long userId,
-                                               @PathVariable("itemId")
+    public ResponseEntity<ItemWithComment> getUserById(@RequestHeader(USER_HEADER) Long userId,
+                                                       @PathVariable("itemId")
                                                Long itemId) {
         log.info("ItemController: запрошена вещ с id: {}", itemId);
-        return ResponseEntity.ok(itemService.getItemById(itemId));
+        return ResponseEntity.ok(itemService.getItemById(userId,itemId));
     }
 
     @GetMapping("/search")

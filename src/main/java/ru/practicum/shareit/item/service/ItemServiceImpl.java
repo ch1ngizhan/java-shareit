@@ -5,16 +5,15 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Comment;
-import ru.practicum.shareit.item.model.CommentDto;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemDto;
+import ru.practicum.shareit.item.model.*;
 import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -25,6 +24,7 @@ import ru.practicum.shareit.user.storage.UserStorage;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -96,11 +96,22 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long id) {
-        log.info("Запрос вещи с ID: {}", id);
-        Item item = getItemOrThrow(id);
-        log.debug("Вещь с ID: {} найдена: {}", id, item.getName());
-        return ItemMapper.toItemDto(item);
+    public ItemWithComment getItemById(Long userId, Long itemId) {
+        getUserOrThrow(userId);
+        Item item = getItemOrThrow(itemId);
+        List<Comment> comments = commentRepository.findAllByItemIdOrderByCreatedDesc(itemId);
+        List<CommentDto> commentsDto = comments.stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
+        LocalDateTime now = LocalDateTime.now();
+        Booking lastBooking = bookingStorage.findFirstByItemIdAndEndBeforeOrderByEndDesc(itemId, now)
+                .orElse(null);
+        Booking nextBooking = bookingStorage.findFirstByItemIdAndStartAfterOrderByStartAsc(itemId, now)
+                .orElse(null);
+        return ItemMapper.toItemWithComment(item,
+                lastBooking != null ? BookingMapper.toBookingDto(lastBooking) : null,
+                nextBooking != null ? BookingMapper.toBookingDto(nextBooking) : null,
+                commentsDto);
     }
     @Transactional
     @Override
@@ -133,8 +144,8 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
         User user = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
-        if (bookingStorage.existsApprovedBooking(itemId,userId, Status.APPROVED)){
-            throw new IllegalArgumentException("");
+        if (!bookingStorage.existsApprovedBooking(itemId, userId, Status.APPROVED)) {
+            throw new IllegalArgumentException("Пользователь не брал эту вещь в аренду");
         }
         Comment comment = CommentMapper.toComment(commentDto,user,item);
         comment.setCreated(LocalDateTime.now());
@@ -151,7 +162,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void validateItemOwnership(Item item, Long userId) {
-        if (!item.getOwner().equals(userId)) {
+        if (!item.getOwner().getId().equals(userId)) {
             log.warn("Пользователь с ID: {} не является владельцем вещи с ID: {}", userId, item.getId());
             throw new AccessDeniedException("Пользователь не является владельцем вещи.");
         }
