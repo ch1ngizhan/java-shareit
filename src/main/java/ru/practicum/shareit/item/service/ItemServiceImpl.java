@@ -142,7 +142,7 @@ public class ItemServiceImpl implements ItemService {
 
             lastBooking = last != null ? BookingMapper.toBookingOut(last) : null;
             nextBooking = next != null ? BookingMapper.toBookingOut(next) : null;
-        }else {
+        } else {
             log.debug("User is not owner, not showing booking information");
         }
         return ItemMapper.toItemWithComment(item,

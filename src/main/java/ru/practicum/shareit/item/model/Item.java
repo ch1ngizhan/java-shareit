@@ -26,7 +26,7 @@ public class Item {
     private String description;
 
     @Column(name = "available", nullable = false)
-    private Boolean available =false;
+    private Boolean available = false;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
