@@ -47,8 +47,8 @@ public class ItemController {
     }
 
     @GetMapping()
-    public ResponseEntity<Collection<ItemDto>> allItems(@RequestHeader(USER_HEADER) Long userId) {
-        Collection<ItemDto> allItems = itemService.getAllItems(userId);
+    public ResponseEntity<Collection<ItemWithComment>> allItems(@RequestHeader(USER_HEADER) Long userId) {
+        Collection<ItemWithComment> allItems = itemService.getAllItems(userId);
         log.info("ItemController: количество всех вещей: {}", allItems.size());
         return ResponseEntity.ok(allItems);
     }

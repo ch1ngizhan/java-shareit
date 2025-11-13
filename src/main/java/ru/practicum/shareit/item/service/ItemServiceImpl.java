@@ -21,10 +21,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -129,7 +126,6 @@ public class ItemServiceImpl implements ItemService {
         BookingOut lastBooking = null;
         BookingOut nextBooking = null;
 
-        // Показываем информацию о бронированиях только владельцу
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
             log.debug("User is owner, checking bookings for item {} at time {}", itemId, now);
@@ -151,15 +147,47 @@ public class ItemServiceImpl implements ItemService {
                 commentsDto);
     }
 
-    @Transactional
     @Override
-    public Collection<ItemDto> getAllItems(Long userId) {
+    public Collection<ItemWithComment> getAllItems(Long userId) {
         log.info("Запрос всех вещей пользователя с ID: {}", userId);
         getUserOrThrow(userId);
-        Collection<Item> items = itemStorage.findByOwnerId(userId);
+        List<Item> items = itemStorage.findByOwnerIdOrderByIdDesc(userId);
         log.debug("Найдено {} вещей для пользователя с ID: {}", items.size(), userId);
+
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
+
+        // Получаем все комментарии для всех вещей одним запросом
+        List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds);
+        Map<Long, List<CommentDto>> commentsByItem = allComments.stream()
+                .collect(Collectors.groupingBy(
+                        comment -> comment.getItem().getId(),
+                        Collectors.mapping(CommentMapper::toCommentDto, Collectors.toList())
+                ));
+
         return items.stream()
-                .map(ItemMapper::toItemDto)
+                .map(item -> {
+                    List<CommentDto> comments = commentsByItem.getOrDefault(item.getId(), Collections.emptyList());
+
+                    // Получаем бронирования только для владельца
+                    BookingOut lastBooking = null;
+                    BookingOut nextBooking = null;
+
+                    LocalDateTime nowTime = LocalDateTime.now();
+                    Booking last = bookingStorage.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
+                            item.getId(), nowTime, Status.APPROVED).orElse(null);
+                    Booking next = bookingStorage.findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
+                            item.getId(), nowTime, Status.APPROVED).orElse(null);
+
+                    lastBooking = last != null ? BookingMapper.toBookingOut(last) : null;
+                    nextBooking = next != null ? BookingMapper.toBookingOut(next) : null;
+
+                    return ItemMapper.toItemWithComment(item, lastBooking, nextBooking, comments);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -186,7 +214,6 @@ public class ItemServiceImpl implements ItemService {
             throw new IllegalArgumentException("Пользователь не брал эту вещь в аренду");
         }
         Comment comment = CommentMapper.toComment(commentDto, user, item);
-        comment.setCreated(LocalDateTime.now());
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 

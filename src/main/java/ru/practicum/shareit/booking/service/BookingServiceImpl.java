@@ -4,9 +4,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingDto;
 import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
@@ -35,18 +35,26 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
+
+        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
+            throw new IllegalArgumentException("Start and end times cannot be null");
+        }
+        if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
+            throw new IllegalArgumentException("Start time must be before end time");
+        }
+        if (bookingDto.getStart().isEqual(bookingDto.getEnd())) {
+            throw new IllegalArgumentException("Start and end times cannot be equal");
+        }
+
         User user = getUserOrThrow(bookerId);
         log.debug("Пользователь найден: {}", user.getId());
-        if (bookingDto.getItemId() == null) {
-            throw new NotFoundException("Item ID cannot be null");
-        }
+
         Item item = getItemOrThrow(bookingDto.getItemId());
 
         if (item.getAvailable() == null || !item.getAvailable()) {
             log.warn("Вещь ID={} недоступна для бронирования. Available: {}", item.getId(), item.getAvailable());
             throw new IllegalArgumentException("Item is not available");
         }
-
 
         Booking booking = BookingMapper.toBooking(bookingDto, item, user);
         bookingStorage.save(booking);
@@ -63,6 +71,13 @@ public class BookingServiceImpl implements BookingService {
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             log.warn("Пользователь ID={} не является владельцем вещи для бронирования ID={}", ownerId, bookingId);
             throw new AccessDeniedException("Booking id=" + bookingId + " нельзя одобрить: пользователь не владелец");
+        }
+
+
+        if (booking.getStatus() != Status.WAITING) {
+            log.warn("Попытка изменить статус бронирования ID={} со статусом {}, ожидается WAITING",
+                    bookingId, booking.getStatus());
+            throw new IllegalArgumentException("Бронирование уже имеет финальный статус: " + booking.getStatus());
         }
 
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
@@ -91,9 +106,32 @@ public class BookingServiceImpl implements BookingService {
         getUserOrThrow(userId);
         LocalDateTime now = LocalDateTime.now();
 
-        List<BookingOut> result = bookingStorage.findByBookerIdOrderByStartDesc(userId)
-                .stream()
-                .filter(booking -> filterByState(booking, state, now))
+        List<Booking> bookings;
+
+        switch (state.toUpperCase()) {
+            case "ALL":
+                bookings = bookingStorage.findByBookerIdOrderByStartDesc(userId);
+                break;
+            case "CURRENT":
+                bookings = bookingStorage.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId, now, now);
+                break;
+            case "PAST":
+                bookings = bookingStorage.findByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
+                break;
+            case "FUTURE":
+                bookings = bookingStorage.findByBookerIdAndStartAfterOrderByStartDesc(userId, now);
+                break;
+            case "WAITING":
+                bookings = bookingStorage.findByBookerIdAndStatusOrderByStartDesc(userId, Status.WAITING);
+                break;
+            case "REJECTED":
+                bookings = bookingStorage.findByBookerIdAndStatusOrderByStartDesc(userId, Status.REJECTED);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown state: " + state);
+        }
+
+        List<BookingOut> result = bookings.stream()
                 .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
 
@@ -107,9 +145,32 @@ public class BookingServiceImpl implements BookingService {
         getUserOrThrow(ownerId);
         LocalDateTime now = LocalDateTime.now();
 
-        List<BookingOut> result = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(ownerId)
-                .stream()
-                .filter(booking -> filterByState(booking, state, now))
+        List<Booking> bookings;
+
+        switch (state.toUpperCase()) {
+            case "ALL":
+                bookings = bookingStorage.findAllByItemOwnerIdOrderByStartDesc(ownerId);
+                break;
+            case "CURRENT":
+                bookings = bookingStorage.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(ownerId, now, now);
+                break;
+            case "PAST":
+                bookings = bookingStorage.findByItemOwnerIdAndEndBeforeOrderByStartDesc(ownerId, now);
+                break;
+            case "FUTURE":
+                bookings = bookingStorage.findByItemOwnerIdAndStartAfterOrderByStartDesc(ownerId, now);
+                break;
+            case "WAITING":
+                bookings = bookingStorage.findByItemOwnerIdAndStatusOrderByStartDesc(ownerId, Status.WAITING);
+                break;
+            case "REJECTED":
+                bookings = bookingStorage.findByItemOwnerIdAndStatusOrderByStartDesc(ownerId, Status.REJECTED);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown state: " + state);
+        }
+
+        List<BookingOut> result = bookings.stream()
                 .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
 

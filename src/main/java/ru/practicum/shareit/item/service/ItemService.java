@@ -15,7 +15,7 @@ public interface ItemService {
 
     ItemWithComment getItemById(Long userId, Long itemId);
 
-    Collection<ItemDto> getAllItems(Long userId);
+    Collection<ItemWithComment> getAllItems(Long userId);
 
     Collection<ItemDto> search(String text);
 

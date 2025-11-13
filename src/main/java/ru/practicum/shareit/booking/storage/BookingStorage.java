@@ -32,4 +32,22 @@ public interface BookingStorage extends JpaRepository<Booking, Long> {
             Long itemId, LocalDateTime now, Status status);
 
     List<Booking> findAllByItemOwnerIdOrderByStartDesc(Long ownerId);
+
+    List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+            Long bookerId, LocalDateTime start, LocalDateTime end);
+
+    List<Booking> findByBookerIdAndEndBeforeOrderByStartDesc(Long bookerId, LocalDateTime end);
+
+    List<Booking> findByBookerIdAndStartAfterOrderByStartDesc(Long bookerId, LocalDateTime start);
+
+    List<Booking> findByBookerIdAndStatusOrderByStartDesc(Long bookerId, Status status);
+
+    List<Booking> findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+            Long ownerId, LocalDateTime start, LocalDateTime end);
+
+    List<Booking> findByItemOwnerIdAndEndBeforeOrderByStartDesc(Long ownerId, LocalDateTime end);
+
+    List<Booking> findByItemOwnerIdAndStartAfterOrderByStartDesc(Long ownerId, LocalDateTime start);
+
+    List<Booking> findByItemOwnerIdAndStatusOrderByStartDesc(Long ownerId, Status status);
 }
