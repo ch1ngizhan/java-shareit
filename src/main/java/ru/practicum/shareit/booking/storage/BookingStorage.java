@@ -7,7 +7,6 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,9 +25,11 @@ public interface BookingStorage extends JpaRepository<Booking, Long> {
                                   @Param("userId") Long userId,
                                   @Param("status") Status status);
 
-    Optional<Booking> findFirstByItemIdAndEndBeforeOrderByEndDesc(Long itemId, LocalDateTime now);
+    Optional<Booking> findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
+            Long itemId, LocalDateTime now, Status status);
 
-    Optional<Booking> findFirstByItemIdAndStartAfterOrderByStartAsc(Long itemId, LocalDateTime now);
+    Optional<Booking> findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
+            Long itemId, LocalDateTime now, Status status);
 
-    List<Booking>findAllByItemOwnerIdOrderByStartDesc(Long ownerId);
+    List<Booking> findAllByItemOwnerIdOrderByStartDesc(Long ownerId);
 }

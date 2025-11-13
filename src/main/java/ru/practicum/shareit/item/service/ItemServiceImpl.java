@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
@@ -16,9 +17,7 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.*;
 import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
@@ -77,6 +76,7 @@ public class ItemServiceImpl implements ItemService {
 
         return ItemMapper.toItemDto(savedItem);
     }
+
     @Transactional
     @Override
     public void delete(Long itemId, Long userId) {
@@ -87,6 +87,7 @@ public class ItemServiceImpl implements ItemService {
         itemStorage.delete(item);
         log.debug("Вещь с ID: {} успешно удалена", itemId);
     }
+
     @Transactional
     @Override
     public ItemDto update(Long userId, ItemDto itemDto, Long itemId) {
@@ -125,16 +126,26 @@ public class ItemServiceImpl implements ItemService {
         List<CommentDto> commentsDto = comments.stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
-        LocalDateTime now = LocalDateTime.now();
-        Booking lastBooking = bookingStorage.findFirstByItemIdAndEndBeforeOrderByEndDesc(itemId, now)
-                .orElse(null);
-        Booking nextBooking = bookingStorage.findFirstByItemIdAndStartAfterOrderByStartAsc(itemId, now)
-                .orElse(null);
+        BookingOut lastBooking = null;
+        BookingOut nextBooking = null;
+
+        // Показываем информацию о бронированиях только владельцу
+        if (item.getOwner().getId().equals(userId)) {
+            LocalDateTime now = LocalDateTime.now();
+            Booking last = bookingStorage.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
+                    itemId, now, Status.APPROVED).orElse(null);
+            Booking next = bookingStorage.findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
+                    itemId, now, Status.APPROVED).orElse(null);
+
+            lastBooking = last != null ? BookingMapper.toBookingOut(last) : null;
+            nextBooking = next != null ? BookingMapper.toBookingOut(next) : null;
+        }
         return ItemMapper.toItemWithComment(item,
-                lastBooking != null ? BookingMapper.toBookingOut(lastBooking) : null,
-                nextBooking != null ? BookingMapper.toBookingOut(nextBooking) : null,
+                lastBooking,
+                nextBooking,
                 commentsDto);
     }
+
     @Transactional
     @Override
     public Collection<ItemDto> getAllItems(Long userId) {
@@ -169,7 +180,7 @@ public class ItemServiceImpl implements ItemService {
         if (!bookingStorage.existsApprovedBooking(itemId, userId, Status.APPROVED)) {
             throw new IllegalArgumentException("Пользователь не брал эту вещь в аренду");
         }
-        Comment comment = CommentMapper.toComment(commentDto,user,item);
+        Comment comment = CommentMapper.toComment(commentDto, user, item);
         comment.setCreated(LocalDateTime.now());
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
@@ -189,6 +200,7 @@ public class ItemServiceImpl implements ItemService {
             throw new AccessDeniedException("Пользователь не является владельцем вещи.");
         }
     }
+
     private User getUserOrThrow(Long id) {
         log.debug("Поиск пользователя по ID: {}", id);
         return userStorage.findById(id)

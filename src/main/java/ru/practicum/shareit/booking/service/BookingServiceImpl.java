@@ -35,6 +35,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
+        User user = getUserOrThrow(bookerId);
+        log.debug("Пользователь найден: {}", user.getId());
         if (bookingDto.getItemId() == null) {
             throw new NotFoundException("Item ID cannot be null");
         }
@@ -45,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Item is not available");
         }
 
-        User user = getUserOrThrow(bookerId);
+
         Booking booking = BookingMapper.toBooking(bookingDto, item, user);
         bookingStorage.save(booking);
         log.info("Бронирование ID={} успешно создано", booking.getId());

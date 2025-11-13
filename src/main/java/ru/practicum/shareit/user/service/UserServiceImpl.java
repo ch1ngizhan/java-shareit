@@ -13,7 +13,6 @@ import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,6 +21,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserStorage userStorage;
+
     @Transactional
     @Override
     public UserDto create(UserDto userDto) {
@@ -40,6 +40,7 @@ public class UserServiceImpl implements UserService {
 
         return UserMapper.toUserDto(createdUser);
     }
+
     @Transactional
     @Override
     public void delete(Long id) {
@@ -49,6 +50,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Пользователь с ID: {} успешно удален", id);
         log.info("Удаление пользователя с ID: {} завершено", id);
     }
+
     @Transactional
     @Override
     public UserDto update(Long id, UserDto userDto) {
@@ -100,6 +102,7 @@ public class UserServiceImpl implements UserService {
         log.info("Пользователь с ID: {} успешно получен", id);
         return UserMapper.toUserDto(user);
     }
+
     @Transactional
     @Override
     public Collection<UserDto> getAllUsers() {

@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ru.practicum.shareit.booking.model.BookingDto;
 import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.Item;
@@ -37,6 +36,7 @@ public class ItemMapper {
         item.setAvailable(dto.getAvailable());
         return item;
     }
+
     public static ItemWithComment toItemWithComment(Item item, BookingOut lastBooking, BookingOut nextBooking,
                                                     List<CommentDto> comments) {
         ItemWithComment dto = new ItemWithComment();
@@ -49,7 +49,6 @@ public class ItemMapper {
         dto.setComments(comments);
         return dto;
     }
-
 
 
 }

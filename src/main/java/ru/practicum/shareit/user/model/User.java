@@ -34,5 +34,4 @@ public class User {
     private List<Comment> comment;
 
 
-
 }
