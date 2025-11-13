@@ -132,13 +132,18 @@ public class ItemServiceImpl implements ItemService {
         // Показываем информацию о бронированиях только владельцу
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
+            log.debug("User is owner, checking bookings for item {} at time {}", itemId, now);
+
             Booking last = bookingStorage.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
                     itemId, now, Status.APPROVED).orElse(null);
             Booking next = bookingStorage.findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
                     itemId, now, Status.APPROVED).orElse(null);
+            log.debug("Found last booking: {}, next booking: {}", last, next);
 
             lastBooking = last != null ? BookingMapper.toBookingOut(last) : null;
             nextBooking = next != null ? BookingMapper.toBookingOut(next) : null;
+        }else {
+            log.debug("User is not owner, not showing booking information");
         }
         return ItemMapper.toItemWithComment(item,
                 lastBooking,
