@@ -161,7 +161,6 @@ public class ItemServiceImpl implements ItemService {
         LocalDateTime now = LocalDateTime.now();
         List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
 
-        // Получаем все комментарии для всех вещей одним запросом
         List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds);
         Map<Long, List<CommentDto>> commentsByItem = allComments.stream()
                 .collect(Collectors.groupingBy(
@@ -173,7 +172,7 @@ public class ItemServiceImpl implements ItemService {
                 .map(item -> {
                     List<CommentDto> comments = commentsByItem.getOrDefault(item.getId(), Collections.emptyList());
 
-                    // Получаем бронирования только для владельца
+
                     BookingOut lastBooking = null;
                     BookingOut nextBooking = null;
 
