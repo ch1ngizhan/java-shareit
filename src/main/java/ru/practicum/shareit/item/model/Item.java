@@ -26,7 +26,7 @@ public class Item {
     private String description;
 
     @Column(name = "available", nullable = false)
-    private Boolean available;
+    private Boolean available =false;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
@@ -47,9 +47,7 @@ public class Item {
     private List<Comment> comments;
 
 
-    public Boolean getAvailable() {
-        return available != null ? available : false;
-    }
+
 
     public void setAvailable(Boolean available) {
         this.available = available != null ? available : false;
