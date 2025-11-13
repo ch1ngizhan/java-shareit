@@ -47,8 +47,6 @@ public class Item {
     private List<Comment> comments;
 
 
-
-
     public void setAvailable(Boolean available) {
         this.available = available != null ? available : false;
     }
