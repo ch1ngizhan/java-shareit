@@ -149,45 +149,76 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemWithComment> getAllItems(Long userId) {
-        log.info("Запрос всех вещей пользователя с ID: {}", userId);
+        log.info("Начало получения всех вещей для пользователя с ID: {}", userId);
+
         getUserOrThrow(userId);
+        log.debug("Пользователь с ID {} существует и проверен", userId);
+
         List<Item> items = itemStorage.findByOwnerIdOrderByIdDesc(userId);
         log.debug("Найдено {} вещей для пользователя с ID: {}", items.size(), userId);
 
         if (items.isEmpty()) {
+            log.info("Для пользователя с ID {} не найдено ни одной вещи. Возвращаем пустой список", userId);
             return Collections.emptyList();
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        log.debug("Получаем ID всех найденных вещей");
         List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
+        log.debug("Получено {} ID вещей", itemIds.size());
 
+        LocalDateTime now = LocalDateTime.now();
+        log.debug("Текущее время для фильтрации бронирований: {}", now);
+
+        log.debug("Загружаем комментарии для всех вещей");
         List<Comment> allComments = commentRepository.findAllByItemIdIn(itemIds);
+        log.debug("Загружено {} комментариев для {} вещей", allComments.size(), itemIds.size());
+
         Map<Long, List<CommentDto>> commentsByItem = allComments.stream()
                 .collect(Collectors.groupingBy(
                         comment -> comment.getItem().getId(),
                         Collectors.mapping(CommentMapper::toCommentDto, Collectors.toList())
                 ));
+        log.debug("Комментарии сгруппированы по ID вещей");
 
-        return items.stream()
+        log.debug("Загружаем последние бронирования (завершенные до текущего момента)");
+        List<Booking> allLastBookings = bookingStorage.findByItemIdInAndEndBeforeAndStatusOrderByEndDesc(
+                itemIds, now, Status.APPROVED);
+        log.debug("Найдено {} последних бронирований", allLastBookings.size());
+
+        log.debug("Загружаем следующие бронирования (начинающиеся после текущего момента)");
+        List<Booking> allNextBookings = bookingStorage.findByItemIdInAndStartAfterAndStatusOrderByStartAsc(
+                itemIds, now, Status.APPROVED);
+        log.debug("Найдено {} следующих бронирований", allNextBookings.size());
+
+        log.debug("Создаем маппинги бронирований по ID вещей");
+        Map<Long, Booking> lastBookingsMap = createLastBookingsMap(allLastBookings);
+        Map<Long, Booking> nextBookingsMap = createNextBookingsMap(allNextBookings);
+        log.debug("Маппинги созданы: {} последних и {} следующих бронирований",
+                lastBookingsMap.size(), nextBookingsMap.size());
+
+        log.debug("Начинаем преобразование вещей в DTO с комментариями и бронированиями");
+        Collection<ItemWithComment> result = items.stream()
                 .map(item -> {
+                    log.trace("Обрабатываем вещь ID: {}, название: {}", item.getId(), item.getName());
+
                     List<CommentDto> comments = commentsByItem.getOrDefault(item.getId(), Collections.emptyList());
+                    log.trace("Для вещи ID: {} найдено {} комментариев", item.getId(), comments.size());
 
+                    BookingOut lastBooking = lastBookingsMap.containsKey(item.getId()) ?
+                            BookingMapper.toBookingOut(lastBookingsMap.get(item.getId())) : null;
+                    BookingOut nextBooking = nextBookingsMap.containsKey(item.getId()) ?
+                            BookingMapper.toBookingOut(nextBookingsMap.get(item.getId())) : null;
 
-                    BookingOut lastBooking = null;
-                    BookingOut nextBooking = null;
-
-                    LocalDateTime nowTime = LocalDateTime.now();
-                    Booking last = bookingStorage.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
-                            item.getId(), nowTime, Status.APPROVED).orElse(null);
-                    Booking next = bookingStorage.findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
-                            item.getId(), nowTime, Status.APPROVED).orElse(null);
-
-                    lastBooking = last != null ? BookingMapper.toBookingOut(last) : null;
-                    nextBooking = next != null ? BookingMapper.toBookingOut(next) : null;
+                    log.trace("Для вещи ID: {} - последнее бронирование: {}, следующее бронирование: {}",
+                            item.getId(), lastBooking != null ? "есть" : "нет", nextBooking != null ? "есть" : "нет");
 
                     return ItemMapper.toItemWithComment(item, lastBooking, nextBooking, comments);
                 })
                 .collect(Collectors.toList());
+
+        log.info("Успешно получено {} вещей с комментариями для пользователя ID: {}",
+                result.size(), userId);
+        return result;
     }
 
     @Override
@@ -239,5 +270,35 @@ public class ItemServiceImpl implements ItemService {
                     log.warn("Пользователь с ID: {} не найден", id);
                     return new NotFoundException("Пользователь с id " + id + " не найдена");
                 });
+    }
+
+    private Map<Long, Booking> createLastBookingsMap(List<Booking> allLastBookings) {
+        Map<Long, Booking> result = new HashMap<>();
+
+        for (Booking booking : allLastBookings) {
+            Long itemId = booking.getItem().getId();
+            // Если еще нет брони для этого предмета или текущее бронирование позже
+            if (!result.containsKey(itemId) ||
+                    booking.getEnd().isAfter(result.get(itemId).getEnd())) {
+                result.put(itemId, booking);
+            }
+        }
+
+        return result;
+    }
+
+    private Map<Long, Booking> createNextBookingsMap(List<Booking> allNextBookings) {
+        Map<Long, Booking> result = new HashMap<>();
+
+        for (Booking booking : allNextBookings) {
+            Long itemId = booking.getItem().getId();
+            // Если еще нет брони для этого предмета или текущее бронирование раньше
+            if (!result.containsKey(itemId) ||
+                    booking.getStart().isBefore(result.get(itemId).getStart())) {
+                result.put(itemId, booking);
+            }
+        }
+
+        return result;
     }
 }

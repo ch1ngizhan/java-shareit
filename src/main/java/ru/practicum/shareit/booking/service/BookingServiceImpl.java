@@ -36,9 +36,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
 
-        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-            throw new IllegalArgumentException("Start and end times cannot be null");
-        }
         if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
             throw new IllegalArgumentException("Start time must be before end time");
         }

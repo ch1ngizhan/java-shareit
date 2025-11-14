@@ -13,8 +13,6 @@ import java.util.Optional;
 public interface BookingStorage extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerIdOrderByStartDesc(Long bookerId);
 
-    List<Booking> findByItemOwnerIdOrderByStartDesc(Long ownerId);
-
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
             "FROM Booking b " +
             "WHERE b.item.id = :itemId " +
@@ -50,4 +48,11 @@ public interface BookingStorage extends JpaRepository<Booking, Long> {
     List<Booking> findByItemOwnerIdAndStartAfterOrderByStartDesc(Long ownerId, LocalDateTime start);
 
     List<Booking> findByItemOwnerIdAndStatusOrderByStartDesc(Long ownerId, Status status);
+
+    List<Booking> findByItemIdInAndEndBeforeAndStatusOrderByEndDesc(
+            List<Long> itemIds, LocalDateTime end, Status status);
+
+    List<Booking> findByItemIdInAndStartAfterAndStatusOrderByStartAsc(
+            List<Long> itemIds, LocalDateTime start, Status status);
+
 }
