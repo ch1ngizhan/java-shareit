@@ -1,28 +1,53 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
 
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Entity
+@Table(name = "items")
 public class Item {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "description", nullable = false)
     private String description;
-    private Boolean available;
-    private Long owner;
-    private Long request;
 
-    public Item(Long id, String name, String description, Boolean available, Long request) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.available = available;
-        this.request = request;
+    @Column(name = "available", nullable = false)
+    private Boolean available = false;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User owner;
+
+    @ManyToOne
+    @JoinColumn(name = "request_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ItemRequest request;
+
+    @OneToMany(mappedBy = "item")
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "item")
+    private List<Comment> comments;
+
+
+    public void setAvailable(Boolean available) {
+        this.available = available != null ? available : false;
     }
-
 }
