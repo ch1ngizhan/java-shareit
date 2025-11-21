@@ -8,6 +8,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.user.model.UserDto;
@@ -138,7 +139,7 @@ class ItemServiceImplExceptionTest {
         commentDto.setText("Great item!");
 
         // When & Then - anotherUser never booked this item
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 itemService.createComment(anotherUser.getId(), savedItem.getId(), commentDto));
     }
 }

@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.UserDto;
@@ -71,7 +72,7 @@ class BookingServiceImplEdgeCasesTest {
         bookingDto.setEnd(sameTime);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -82,7 +83,7 @@ class BookingServiceImplEdgeCasesTest {
         bookingDto.setEnd(LocalDateTime.now().plusDays(1));
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -98,7 +99,7 @@ class BookingServiceImplEdgeCasesTest {
         bookingDto.setItemId(unavailableItem.getId());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -137,14 +138,14 @@ class BookingServiceImplEdgeCasesTest {
     @Test
     void getBookingsByUser_shouldThrowExceptionForInvalidState() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.getBookingsByUser(booker.getId(), "INVALID_STATE"));
     }
 
     @Test
     void getBookingsByOwner_shouldThrowExceptionForInvalidState() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.getBookingsByOwner(owner.getId(), "INVALID_STATE"));
     }
 

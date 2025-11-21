@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.UserDto;
@@ -100,7 +101,7 @@ class BookingServiceImplExceptionTest {
         bookingDto.setItemId(unavailableItem.getId());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -118,7 +119,7 @@ class BookingServiceImplExceptionTest {
         bookingDto.setEnd(LocalDateTime.now().plusDays(1));
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -130,7 +131,7 @@ class BookingServiceImplExceptionTest {
         bookingDto.setEnd(sameTime);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
@@ -158,7 +159,7 @@ class BookingServiceImplExceptionTest {
         bookingService.update(owner.getId(), true, createdBooking.getId()); // Approve first
 
         // When & Then - Try to approve again
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.update(owner.getId(), true, createdBooking.getId()));
     }
 
@@ -189,7 +190,7 @@ class BookingServiceImplExceptionTest {
     @Test
     void getBookingsByUser_shouldThrowIllegalArgumentExceptionForInvalidState() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.getBookingsByUser(booker.getId(), "INVALID_STATE"));
     }
 
@@ -203,7 +204,7 @@ class BookingServiceImplExceptionTest {
     @Test
     void getBookingsByOwner_shouldThrowIllegalArgumentExceptionForInvalidState() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.getBookingsByOwner(owner.getId(), "INVALID_STATE"));
     }
 }
