@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.model.User;
@@ -36,12 +37,12 @@ public class BookingServiceImpl implements BookingService {
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
 
+        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
+            throw new ValidationException("Дата начала и окончания не могут быть пустыми");
+        }
 
         if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
-            throw new IllegalArgumentException("Start time must be before end time");
-        }
-        if (bookingDto.getStart().isEqual(bookingDto.getEnd())) {
-            throw new IllegalArgumentException("Start and end times cannot be equal");
+            throw new ValidationException("Дата начала должна быть раньше даты окончания");
         }
 
         User user = getUserOrThrow(bookerId);
@@ -51,7 +52,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (item.getAvailable() == null || !item.getAvailable()) {
             log.warn("Вещь ID={} недоступна для бронирования. Available: {}", item.getId(), item.getAvailable());
-            throw new IllegalArgumentException("Item is not available");
+            throw new ValidationException("Вещь недоступна для бронирования");
         }
         if (item.getOwner().getId().equals(bookerId)) {
             throw new AccessDeniedException("Владелец не может бронировать свою собственную вещь");
@@ -74,11 +75,10 @@ public class BookingServiceImpl implements BookingService {
             throw new AccessDeniedException("Booking id=" + bookingId + " нельзя одобрить: пользователь не владелец");
         }
 
-
         if (booking.getStatus() != Status.WAITING) {
             log.warn("Попытка изменить статус бронирования ID={} со статусом {}, ожидается WAITING",
                     bookingId, booking.getStatus());
-            throw new IllegalArgumentException("Бронирование уже имеет финальный статус: " + booking.getStatus());
+            throw new ValidationException("Бронирование уже имеет финальный статус: " + booking.getStatus());
         }
 
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
@@ -129,15 +129,12 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingStorage.findByBookerIdAndStatusOrderByStartDesc(userId, Status.REJECTED);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown state: " + state);
+                throw new ValidationException("Unknown state: " + state);
         }
 
-        List<BookingOut> result = bookings.stream()
+        return bookings.stream()
                 .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
-
-        log.info("Найдено {} бронирований для пользователя ID={} с фильтром state={}", result.size(), userId, state);
-        return result;
     }
 
     @Override
@@ -168,52 +165,29 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingStorage.findByItemOwnerIdAndStatusOrderByStartDesc(ownerId, Status.REJECTED);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown state: " + state);
+                throw new ValidationException("Unknown state: " + state);
         }
 
-        List<BookingOut> result = bookings.stream()
+        return bookings.stream()
                 .map(BookingMapper::toBookingOut)
                 .collect(Collectors.toList());
-
-        log.info("Найдено {} бронирований для владельца ID={} с фильтром state={}", result.size(), ownerId, state);
-        return result;
-    }
-
-    private boolean filterByState(Booking booking, String state, LocalDateTime now) {
-        return switch (state.toUpperCase()) {
-            case "CURRENT" -> booking.getStart().isBefore(now) && booking.getEnd().isAfter(now);
-            case "PAST" -> booking.getEnd().isBefore(now);
-            case "FUTURE" -> booking.getStart().isAfter(now);
-            case "WAITING" -> booking.getStatus() == Status.WAITING;
-            case "REJECTED" -> booking.getStatus() == Status.REJECTED;
-            default -> true;
-        };
     }
 
     private User getUserOrThrow(Long id) {
         log.debug("Поиск пользователя по ID={}", id);
         return userStorage.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Пользователь ID={} не найден", id);
-                    return new NotFoundException("Пользователь с id " + id + " не найден");
-                });
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
 
     private Item getItemOrThrow(Long id) {
         log.debug("Поиск вещи по ID={}", id);
         return itemStorage.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Вещь ID={} не найдена", id);
-                    return new NotFoundException("Вещь с id " + id + " не найдена");
-                });
+                .orElseThrow(() -> new NotFoundException("Вещь с id " + id + " не найдена"));
     }
 
     private Booking getBookingOrThrow(Long id) {
         log.debug("Поиск бронирования по ID={}", id);
         return bookingStorage.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Бронирование ID={} не найдено", id);
-                    return new NotFoundException("Бронирование с id " + id + " не найдено");
-                });
+                .orElseThrow(() -> new NotFoundException("Бронирование с id " + id + " не найдено"));
     }
 }
