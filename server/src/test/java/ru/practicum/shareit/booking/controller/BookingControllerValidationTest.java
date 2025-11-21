@@ -23,16 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(BookingController.class)
 class BookingControllerValidationTest {
 
+    private static final String USER_HEADER = "X-Sharer-User-Id";
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockBean
     private BookingService bookingService;
-
-    private static final String USER_HEADER = "X-Sharer-User-Id";
 
     @Test
     void create_shouldReturnBadRequestForInvalidDates() throws Exception {

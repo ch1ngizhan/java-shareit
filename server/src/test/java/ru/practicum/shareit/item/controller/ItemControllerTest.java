@@ -29,18 +29,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ItemController.class)
 class ItemControllerTest {
 
+    private static final String USER_HEADER = "X-Sharer-User-Id";
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockBean
     private ItemService itemService;
-
     private ItemDto itemDto;
     private ItemWithComment itemWithComment;
-    private static final String USER_HEADER = "X-Sharer-User-Id";
 
     @BeforeEach
     void setUp() {

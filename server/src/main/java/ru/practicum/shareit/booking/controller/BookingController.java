@@ -16,9 +16,8 @@ import java.util.List;
 @RequestMapping("/bookings")
 public class BookingController {
 
-    private final BookingService bookingService;
-
     public static final String USER_ID_HEADER = "X-Sharer-User-Id";
+    private final BookingService bookingService;
 
     @PostMapping
     public BookingOut create(@RequestHeader(USER_ID_HEADER) Long bookerId,
