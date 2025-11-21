@@ -11,7 +11,6 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.handleValidationException;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.*;
@@ -245,7 +244,7 @@ public class ItemServiceImpl implements ItemService {
         Booking booking = bookingStorage
                 .findFirstByItemIdAndBookerIdAndEndBeforeAndStatusOrderByEndDesc(
                         itemId, userId, LocalDateTime.now(), Status.APPROVED)
-                .orElseThrow(() -> new handleValidationException("Пользователь не может оставить комментарий. " +
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не может оставить комментарий. " +
                         "Он не завершил бронирование этой вещи."));
 
         Comment comment = CommentMapper.toComment(commentDto, user, item);
