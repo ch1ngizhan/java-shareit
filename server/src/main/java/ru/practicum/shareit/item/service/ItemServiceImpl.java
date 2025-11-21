@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.handleValidationException;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.*;
@@ -239,12 +240,18 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
         User user = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
-        if (!bookingStorage.existsApprovedBooking(itemId, userId, Status.APPROVED)) {
-            throw new IllegalArgumentException("Пользователь не брал эту вещь в аренду");
-        }
+
+        // Находим хотя бы одно завершённое бронирование
+        Booking booking = bookingStorage
+                .findFirstByItemIdAndBookerIdAndEndBeforeAndStatusOrderByEndDesc(
+                        itemId, userId, LocalDateTime.now(), Status.APPROVED)
+                .orElseThrow(() -> new handleValidationException("Пользователь не может оставить комментарий. " +
+                        "Он не завершил бронирование этой вещи."));
+
         Comment comment = CommentMapper.toComment(commentDto, user, item);
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
+
 
     private Item getItemOrThrow(Long id) {
         log.debug("Поиск вещи с ID: {}", id);
