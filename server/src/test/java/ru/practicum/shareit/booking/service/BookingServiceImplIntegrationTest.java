@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.AccessDeniedException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.UserDto;
@@ -92,7 +93,7 @@ class BookingServiceImplIntegrationTest {
         bookingDto.setItemId(unavailableItem.getId());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ValidationException.class, () ->
                 bookingService.create(booker.getId(), bookingDto));
     }
 
