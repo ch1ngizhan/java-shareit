@@ -55,9 +55,11 @@ class BookingServiceImplTest {
         item = new Item();
         item.setId(10L);
         item.setName("Drill");
-        item.setOwner(new User() {{
-            setId(2L);
-        }}); // владелец другой
+
+        User owner = new User();
+        owner.setId(2L);
+        item.setOwner(owner); // владелец другой
+
         item.setAvailable(true);
 
         bookingDto = new BookingDto();
@@ -73,7 +75,6 @@ class BookingServiceImplTest {
         booking.setEnd(bookingDto.getEnd());
         booking.setStatus(Status.WAITING);
     }
-
 
     @Test
     void createBooking_itemNotAvailable_throwsValidationException() {
@@ -114,9 +115,10 @@ class BookingServiceImplTest {
 
     @Test
     void getBooking_success() {
-        booking.setItem(new Item() {{
-            setOwner(user);
-        }}); // user является владельцем
+        Item bookingItem = new Item();
+        bookingItem.setOwner(user);
+        booking.setItem(bookingItem);
+
         when(bookingStorage.findById(booking.getId())).thenReturn(Optional.of(booking));
 
         BookingOut result = bookingService.getBooking(user.getId(), booking.getId());
