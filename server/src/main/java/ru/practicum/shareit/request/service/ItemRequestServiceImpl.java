@@ -5,18 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import ru.practicum.shareit.exception.NotFoundException;
-
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
-
 import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
@@ -74,7 +70,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
 
-
     @Override
     public ItemRequestDto getById(Long userId, Long requestId) {
         getUserOrThrow(userId);
@@ -92,6 +87,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         return dto;
     }
+
     private User getUserOrThrow(Long id) {
         log.debug("Поиск пользователя по ID: {}", id);
         return userStorage.findById(id)

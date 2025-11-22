@@ -2,18 +2,19 @@ package ru.practicum.shareit.booking.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingOut;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
-import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
@@ -54,7 +55,9 @@ class BookingServiceImplTest {
         item = new Item();
         item.setId(10L);
         item.setName("Drill");
-        item.setOwner(new User() {{ setId(2L); }}); // владелец другой
+        item.setOwner(new User() {{
+            setId(2L);
+        }}); // владелец другой
         item.setAvailable(true);
 
         bookingDto = new BookingDto();
@@ -111,7 +114,9 @@ class BookingServiceImplTest {
 
     @Test
     void getBooking_success() {
-        booking.setItem(new Item() {{ setOwner(user); }}); // user является владельцем
+        booking.setItem(new Item() {{
+            setOwner(user);
+        }}); // user является владельцем
         when(bookingStorage.findById(booking.getId())).thenReturn(Optional.of(booking));
 
         BookingOut result = bookingService.getBooking(user.getId(), booking.getId());
