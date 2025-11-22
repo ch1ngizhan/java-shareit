@@ -28,7 +28,7 @@ public class ItemRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requestor_id", nullable = false)
-    private User requestor;
+    private User requester;
 
     @Column(name = "created", nullable = false)
     @Builder.Default

@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.mapper;
 
-
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.shareit.booking.model.BookingOut;
@@ -14,13 +13,15 @@ import java.util.List;
 @Slf4j
 @NoArgsConstructor
 public class ItemMapper {
+
     public static ItemDto toItemDto(Item item) {
         ItemDto itemDto = new ItemDto();
         itemDto.setId(item.getId());
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getAvailable());
-        itemDto.setRequest(item.getRequest());
+        itemDto.setRequestId(item.getRequest() != null ? item.getRequest().getId() : null);
+
         return itemDto;
     }
 
@@ -34,11 +35,17 @@ public class ItemMapper {
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
         item.setAvailable(dto.getAvailable());
+
+
         return item;
     }
 
-    public static ItemWithComment toItemWithComment(Item item, BookingOut lastBooking, BookingOut nextBooking,
-                                                    List<CommentDto> comments) {
+    public static ItemWithComment toItemWithComment(
+            Item item,
+            BookingOut lastBooking,
+            BookingOut nextBooking,
+            List<CommentDto> comments) {
+
         ItemWithComment dto = new ItemWithComment();
         dto.setId(item.getId());
         dto.setName(item.getName());
@@ -47,8 +54,7 @@ public class ItemMapper {
         dto.setLastBooking(lastBooking);
         dto.setNextBooking(nextBooking);
         dto.setComments(comments);
+
         return dto;
     }
-
-
 }
