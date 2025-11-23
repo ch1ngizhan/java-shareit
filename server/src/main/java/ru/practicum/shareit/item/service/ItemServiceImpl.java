@@ -17,6 +17,8 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.*;
 import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
@@ -33,6 +35,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserStorage userStorage;
     private final BookingStorage bookingStorage;
     private final CommentRepository commentRepository;
+    private final ItemRequestStorage itemRequestStorage;
 
     @Transactional
     @Override
@@ -54,7 +57,14 @@ public class ItemServiceImpl implements ItemService {
             newItem.setAvailable(false);
         }
 
+
         Item item = ItemMapper.toItem(newItem);
+
+        if (newItem.getRequestId() != null) {
+            ItemRequest request = itemRequestStorage.findById(newItem.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Request not found"));
+            item.setRequest(request);
+        }
 
 
         if (item.getAvailable() == null) {
