@@ -63,13 +63,35 @@ class BookingControllerTest {
         bookingOut.setStart(bookingDto.getStart());
         bookingOut.setEnd(bookingDto.getEnd());
         bookingOut.setBooker(booker);
-        bookingOut.setItem(item); // FIX: Устанавливаем item
+        bookingOut.setItem(item);
         bookingOut.setStatus(Status.WAITING);
     }
 
     @Test
     void create_shouldReturnCreatedBooking() throws Exception {
-        when(bookingService.create(anyLong(), any(BookingDto.class))).thenReturn(bookingOut);
+
+        UserDto booker = UserDto.builder()
+                .id(2L)
+                .name("Booker")
+                .email("booker@example.com")
+                .build();
+
+        ItemDto item = ItemDto.builder()
+                .id(1L)
+                .name("Test Item")
+                .description("Test Description")
+                .available(true)
+                .build();
+
+        BookingOut completeBookingOut = new BookingOut();
+        completeBookingOut.setId(1L);
+        completeBookingOut.setStart(bookingDto.getStart());
+        completeBookingOut.setEnd(bookingDto.getEnd());
+        completeBookingOut.setBooker(booker);
+        completeBookingOut.setItem(item);
+        completeBookingOut.setStatus(Status.WAITING);
+
+        when(bookingService.create(anyLong(), any(BookingDto.class))).thenReturn(completeBookingOut);
 
         mockMvc.perform(post("/bookings")
                         .header(USER_HEADER, 2L)
@@ -77,12 +99,13 @@ class BookingControllerTest {
                         .content(objectMapper.writeValueAsString(bookingDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.status").value("WAITING"));
+                .andExpect(jsonPath("$.status").value("WAITING"))
+                .andExpect(jsonPath("$.item").exists()) // Проверяем что item присутствует
+                .andExpect(jsonPath("$.booker").exists()); // Проверяем что booker присутствует
     }
 
     @Test
     void update_shouldReturnUpdatedBooking() throws Exception {
-        // FIX: Создаем полностью заполненный объект для обновленного бронирования
         UserDto booker = UserDto.builder()
                 .id(2L)
                 .name("Booker")
