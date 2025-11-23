@@ -16,7 +16,6 @@ class BookingMapperTest {
 
     @Test
     void toBookingDto_shouldConvertBookingToDto() {
-        // Given
         User booker = new User();
         booker.setId(1L);
 
@@ -32,26 +31,22 @@ class BookingMapperTest {
                 .status(Status.WAITING)
                 .build();
 
-        // When
         BookingDto result = BookingMapper.toBookingDto(booking);
 
-        // Then
         assertNotNull(result);
         assertEquals(booking.getId(), result.getId());
         assertEquals(booking.getStart(), result.getStart());
         assertEquals(booking.getEnd(), result.getEnd());
-        assertEquals(booking.getBooker().getId(), result.getBooker());
         assertEquals(booking.getItem().getId(), result.getItemId());
         assertEquals(booking.getStatus(), result.getStatus());
     }
 
     @Test
     void toBooking_shouldConvertDtoToBooking() {
-        // Given
         BookingDto bookingDto = new BookingDto();
-        bookingDto.setId(1L);
         bookingDto.setStart(LocalDateTime.now().plusDays(1));
         bookingDto.setEnd(LocalDateTime.now().plusDays(2));
+        bookingDto.setItemId(2L);
 
         Item item = new Item();
         item.setId(2L);
@@ -59,12 +54,9 @@ class BookingMapperTest {
         User booker = new User();
         booker.setId(3L);
 
-        // When
         Booking result = BookingMapper.toBooking(bookingDto, item, booker);
 
-        // Then
         assertNotNull(result);
-        assertEquals(bookingDto.getId(), result.getId());
         assertEquals(bookingDto.getStart(), result.getStart());
         assertEquals(bookingDto.getEnd(), result.getEnd());
         assertEquals(item, result.getItem());
@@ -74,7 +66,6 @@ class BookingMapperTest {
 
     @Test
     void toBookingOut_shouldConvertBookingToOut() {
-        // Given
         User booker = new User();
         booker.setId(1L);
         booker.setName("Booker");
@@ -95,10 +86,8 @@ class BookingMapperTest {
                 .status(Status.WAITING)
                 .build();
 
-        // When
         BookingOut result = BookingMapper.toBookingOut(booking);
 
-        // Then
         assertNotNull(result);
         assertEquals(booking.getId(), result.getId());
         assertEquals(booking.getStart(), result.getStart());
@@ -110,10 +99,6 @@ class BookingMapperTest {
 
     @Test
     void toBookingOut_shouldReturnNullForNullInput() {
-        // When
-        BookingOut result = BookingMapper.toBookingOut(null);
-
-        // Then
-        assertNull(result);
+        assertNull(BookingMapper.toBookingOut(null));
     }
 }

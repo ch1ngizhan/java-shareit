@@ -17,7 +17,6 @@ public class BookingDto {
 
     private LocalDateTime end;
 
-    private Long booker;
 
     private Long itemId;
 

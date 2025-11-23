@@ -50,7 +50,7 @@ public class BookingServiceImpl implements BookingService {
 
         Item item = getItemOrThrow(bookingDto.getItemId());
 
-        if (item.getAvailable() == null || !item.getAvailable()) {
+        if (!item.getAvailable()) {
             log.warn("Вещь ID={} недоступна для бронирования. Available: {}", item.getId(), item.getAvailable());
             throw new ValidationException("Вещь недоступна для бронирования");
         }
