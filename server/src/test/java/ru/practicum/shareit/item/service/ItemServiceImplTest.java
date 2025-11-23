@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.CommentDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemDto;
@@ -19,6 +21,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -127,5 +130,100 @@ class ItemServiceImplTest {
         commentDto.setText("Good");
 
         assertThrows(ValidationException.class, () -> itemService.createComment(1L, 10L, commentDto));
+    }
+
+    @Test
+    void createItem_WithNullAvailable_ShouldSetDefaultValue() {
+        // Подготовка
+        ItemDto itemDto = new ItemDto();
+        itemDto.setName("Test");
+        itemDto.setDescription("Test");
+        itemDto.setAvailable(null); // null значение
+
+        User user = new User();
+        user.setId(1L);
+
+        when(userStorage.findById(1L)).thenReturn(Optional.of(user));
+        when(itemStorage.save(any(Item.class))).thenAnswer(invocation -> {
+            Item savedItem = invocation.getArgument(0);
+            savedItem.setId(1L);
+            return savedItem;
+        });
+
+        // Выполнение
+        ItemDto result = itemService.create(itemDto, 1L);
+
+        // Проверка - должно установиться значение по умолчанию
+        assertNotNull(result.getAvailable());
+    }
+
+    @Test
+    void getAllItems_WithMultipleItems_ShouldGroupBookingsAndComments() {
+        // Подготовка
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+
+        Item item1 = new Item();
+        item1.setId(1L);
+        item1.setOwner(user);
+
+        Item item2 = new Item();
+        item2.setId(2L);
+        item2.setOwner(user);
+
+        when(userStorage.findById(userId)).thenReturn(Optional.of(user));
+        when(itemStorage.findByOwnerIdOrderByIdDesc(userId)).thenReturn(List.of(item1, item2));
+        when(commentRepository.findAllByItemIdIn(any())).thenReturn(List.of());
+        when(bookingStorage.findByItemIdInAndEndBeforeAndStatusOrderByEndDesc(any(), any(), any())).thenReturn(List.of());
+        when(bookingStorage.findByItemIdInAndStartAfterAndStatusOrderByStartAsc(any(), any(), any())).thenReturn(List.of());
+
+        // Выполнение
+        var result = itemService.getAllItems(userId);
+
+        // Проверка
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void createComment_WithValidData_ShouldSaveComment() {
+        // Подготовка
+        Long userId = 1L;
+        Long itemId = 1L;
+        CommentDto commentDto = new CommentDto();
+        commentDto.setText("Great item!");
+
+        User user = new User();
+        user.setId(userId);
+        user.setName("Test User");
+
+        Item item = new Item();
+        item.setId(itemId);
+
+        Booking booking = new Booking();
+        booking.setId(1L);
+        booking.setStatus(Status.APPROVED);
+        booking.setEnd(LocalDateTime.now().minusDays(1));
+
+        Comment savedComment = new Comment();
+        savedComment.setId(1L);
+        savedComment.setText("Great item!");
+        savedComment.setAuthor(user);
+        savedComment.setItem(item);
+        savedComment.setCreated(LocalDateTime.now());
+
+        when(userStorage.findById(userId)).thenReturn(Optional.of(user));
+        when(itemStorage.findById(itemId)).thenReturn(Optional.of(item));
+        when(bookingStorage.findFirstByItemIdAndBookerIdAndEndBeforeAndStatusOrderByEndDesc(
+                eq(itemId), eq(userId), any(LocalDateTime.class), eq(Status.APPROVED)))
+                .thenReturn(Optional.of(booking));
+        when(commentRepository.save(any(Comment.class))).thenReturn(savedComment);
+
+        // Выполнение
+        CommentDto result = itemService.createComment(userId, itemId, commentDto);
+
+        // Проверка
+        assertNotNull(result);
+        assertEquals("Great item!", result.getText());
     }
 }

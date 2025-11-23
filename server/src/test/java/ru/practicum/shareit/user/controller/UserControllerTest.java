@@ -103,4 +103,30 @@ class UserControllerTest {
 
         verify(userService, times(1)).delete(1L);
     }
+
+    @Test
+    void update_WithNullUserId_ShouldThrowException() throws Exception {
+        UserDto userDto = new UserDto();
+        userDto.setName("Test User");
+
+        // Используем MockMvc для проверки обработки исключений
+        mockMvc.perform(patch("/users/null")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void update_WithInvalidUserId_ShouldThrowException() throws Exception {
+        UserDto userDto = new UserDto();
+        userDto.setName("Test User");
+
+        when(userService.update(anyLong(), any(UserDto.class)))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        mockMvc.perform(patch("/users/abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isBadRequest());
+    }
 }

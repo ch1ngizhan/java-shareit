@@ -132,4 +132,55 @@ class UserServiceImplTest {
 
         assertThrows(NotFoundException.class, () -> userService.delete(1L));
     }
+
+    @Test
+    void updateUser_WithEmptyName_ShouldKeepOriginalName() {
+        // Подготовка
+        Long userId = 1L;
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setName("Original Name");
+        existingUser.setEmail("original@example.com");
+
+        UserDto updateDto = new UserDto();
+        updateDto.setName("   "); // Пустое имя с пробелами
+        updateDto.setEmail("updated@example.com");
+
+        when(userStorage.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userStorage.existsByEmail("updated@example.com")).thenReturn(false);
+        when(userStorage.save(any(User.class))).thenReturn(existingUser);
+
+        // Выполнение
+        UserDto result = userService.update(userId, updateDto);
+
+        // Проверка - имя должно остаться оригинальным
+        assertEquals("Original Name", result.getName());
+        assertEquals("updated@example.com", result.getEmail());
+    }
+
+    @Test
+    void updateUser_WithSameEmail_ShouldNotCheckUniqueness() {
+        // Подготовка
+        Long userId = 1L;
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setName("Test User");
+        existingUser.setEmail("test@example.com");
+
+        UserDto updateDto = new UserDto();
+        updateDto.setName("Updated Name");
+        updateDto.setEmail("test@example.com"); // Тот же email
+
+        when(userStorage.findById(userId)).thenReturn(Optional.of(existingUser));
+        // existsByEmail не должен вызываться для того же email
+        when(userStorage.save(any(User.class))).thenReturn(existingUser);
+
+        // Выполнение
+        UserDto result = userService.update(userId, updateDto);
+
+        // Проверка
+        assertEquals("Updated Name", result.getName());
+        verify(userStorage, never()).existsByEmail(anyString());
+    }
+
 }
