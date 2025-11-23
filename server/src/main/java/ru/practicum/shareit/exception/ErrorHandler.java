@@ -34,6 +34,13 @@ public class ErrorHandler {
         return new ErrorResponse(errorMessage);
     }
 
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCustomValidationException(final ValidationException e) {
+        log.warn("Ошибка валидации: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
 
     @ExceptionHandler({IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
