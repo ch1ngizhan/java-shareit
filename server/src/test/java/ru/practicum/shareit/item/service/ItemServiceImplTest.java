@@ -17,6 +17,8 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.storage.CommentRepository;
 import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
@@ -40,6 +42,9 @@ class ItemServiceImplTest {
 
     @Mock
     private CommentRepository commentRepository;
+
+    @Mock
+    private ItemRequestStorage itemRequestStorage;
 
     @InjectMocks
     private ItemServiceImpl itemService;
@@ -225,5 +230,71 @@ class ItemServiceImplTest {
         // Проверка
         assertNotNull(result);
         assertEquals("Great item!", result.getText());
+    }
+
+    @Test
+    void createItem_nullDto_throwsException() {
+        when(userStorage.findById(1L)).thenReturn(Optional.of(user));
+        assertThrows(NotFoundException.class, () -> itemService.create(null, 1L));
+    }
+
+    @Test
+    void createItem_withRequestId_shouldAttachRequest() {
+        ItemDto dto = new ItemDto();
+        dto.setName("Test");
+        dto.setDescription("Test");
+        dto.setAvailable(true);
+        dto.setRequestId(5L);
+
+        ItemRequest req = new ItemRequest();
+        req.setId(5L);
+
+        when(userStorage.findById(1L)).thenReturn(Optional.of(user));
+        when(itemRequestStorage.findById(5L)).thenReturn(Optional.of(req));
+        when(itemStorage.save(any())).thenAnswer(invocation -> {
+            Item saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
+
+        ItemDto result = itemService.create(dto, 1L);
+
+        assertNotNull(result);
+        assertEquals(10L, result.getId());
+    }
+
+    @Test
+    void updateItem_success() {
+        when(itemStorage.findById(10L)).thenReturn(Optional.of(item));
+        when(itemStorage.save(any(Item.class))).thenAnswer(i -> i.getArgument(0));
+
+        ItemDto update = new ItemDto();
+        update.setName("NewName");
+        update.setDescription("NewDesc");
+        update.setAvailable(false);
+
+        ItemDto result = itemService.update(1L, update, 10L);
+
+        assertEquals("NewName", result.getName());
+        assertEquals("NewDesc", result.getDescription());
+        assertFalse(result.getAvailable());
+    }
+
+    @Test
+    void updateItem_notOwner_throwsException() {
+        User other = new User();
+        other.setId(2L);
+
+        when(itemStorage.findById(10L)).thenReturn(Optional.of(item));
+
+        assertThrows(AccessDeniedException.class,
+                () -> itemService.update(2L, itemDto, 10L));
+    }
+
+    @Test
+    void updateItem_itemNotFound() {
+        when(itemStorage.findById(10L)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class,
+                () -> itemService.update(1L, itemDto, 10L));
     }
 }
