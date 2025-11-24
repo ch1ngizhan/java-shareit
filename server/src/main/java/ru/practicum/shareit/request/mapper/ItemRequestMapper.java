@@ -5,7 +5,9 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +39,18 @@ public class ItemRequestMapper {
         request.setId(requestDto.getId());
         request.setDescription(requestDto.getDescription());
         request.setCreated(requestDto.getCreated());
+        return request;
+    }
+
+    public static ItemRequest toNewItemRequest(ItemRequestDto requestDto, User requester) {
+        if (requestDto == null) {
+            return null;
+        }
+
+        ItemRequest request = new ItemRequest();
+        request.setDescription(requestDto.getDescription());
+        request.setRequester(requester);
+        request.setCreated(LocalDateTime.now());
         return request;
     }
 }

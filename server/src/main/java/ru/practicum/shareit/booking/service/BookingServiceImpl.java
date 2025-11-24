@@ -37,14 +37,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingOut create(Long bookerId, BookingDto bookingDto) {
         log.info("Создание нового бронирования. Пользователь ID={}, Вещь ID={}", bookerId, bookingDto.getItemId());
 
-        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-            throw new ValidationException("Дата начала и окончания не могут быть пустыми");
-        }
-
-        if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
-            throw new ValidationException("Дата начала должна быть раньше даты окончания");
-        }
-
         User user = getUserOrThrow(bookerId);
         log.debug("Пользователь найден: {}", user.getId());
 
@@ -54,6 +46,7 @@ public class BookingServiceImpl implements BookingService {
             log.warn("Вещь ID={} недоступна для бронирования. Available: {}", item.getId(), item.getAvailable());
             throw new ValidationException("Вещь недоступна для бронирования");
         }
+
         if (item.getOwner().getId().equals(bookerId)) {
             throw new AccessDeniedException("Владелец не может бронировать свою собственную вещь");
         }

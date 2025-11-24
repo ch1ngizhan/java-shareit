@@ -22,6 +22,16 @@ public class BookingController {
             @RequestHeader("X-Sharer-User-Id") Long userId,
             @Valid @RequestBody BookingDto bookingDto) {
         log.info("POST /bookings - Создание бронирования пользователем ID: {}", userId);
+
+
+        if (bookingDto.getStart().isAfter(bookingDto.getEnd())) {
+            return ResponseEntity.badRequest().body("Start date must be before end date");
+        }
+
+        if (bookingDto.getStart().isEqual(bookingDto.getEnd())) {
+            return ResponseEntity.badRequest().body("Start and end dates cannot be equal");
+        }
+
         return bookingClient.createBooking(userId, bookingDto);
     }
 

@@ -57,6 +57,9 @@ public class ItemController {
     public ResponseEntity<Object> searchItems(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @RequestParam(name = "text") String text) {
         log.info("Search items with text: {}", text);
+        if (text == null || text.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Пустой поисковый запрос");
+        }
         return itemClient.searchItems(userId, text);
     }
 

@@ -27,7 +27,6 @@ public class UserServiceImpl implements UserService {
         log.info("Создание нового пользователя: email={}, name={}",
                 userDto.getEmail(), userDto.getName());
 
-        validateEmailFormat(userDto.getEmail());
         validateEmailUniqueness(userDto.getEmail());
 
         User user = UserMapper.toUser(userDto);

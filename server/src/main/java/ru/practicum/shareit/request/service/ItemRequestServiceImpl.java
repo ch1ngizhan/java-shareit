@@ -17,7 +17,6 @@ import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,10 +34,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         User requester = getUserOrThrow(userId);
 
-        ItemRequest request = new ItemRequest();
-        request.setDescription(requestDto.getDescription());
-        request.setRequester(requester);
-        request.setCreated(LocalDateTime.now());
+        ItemRequest request = ItemRequestMapper.toNewItemRequest(requestDto,requester);
 
         ItemRequest savedRequest = requestStorage.save(request);
 

@@ -1,3 +1,4 @@
+
 package ru.practicum.shareit.booking.dto;
 
 import jakarta.validation.constraints.Future;
@@ -16,11 +17,11 @@ public class BookingDto {
     private Long id;
 
     @NotNull(message = "Start cannot be null")
-    @FutureOrPresent
+    @FutureOrPresent(message = "Start must be in present or future")
     private LocalDateTime start;
 
     @NotNull(message = "End cannot be null")
-    @Future
+    @Future(message = "End must be in future")
     private LocalDateTime end;
 
     private Long booker;

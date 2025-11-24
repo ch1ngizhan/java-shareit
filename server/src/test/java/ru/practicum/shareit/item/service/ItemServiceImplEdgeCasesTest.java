@@ -89,10 +89,4 @@ class ItemServiceImplEdgeCasesTest {
         assertTrue(result.isEmpty());
     }
 
-    @Test
-    void search_NullText_ShouldReturnEmptyList() {
-        // Проверка
-        var result = itemService.search(null);
-        assertTrue(result.isEmpty());
-    }
 }

@@ -37,7 +37,6 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
     private final ItemRequestStorage itemRequestStorage;
 
-    @Transactional
     @Override
     public ItemDto create(ItemDto newItem, Long ownerId) {
         log.info("Создание новой вещи пользователем с ID: {}", ownerId);
@@ -47,18 +46,12 @@ public class ItemServiceImpl implements ItemService {
             throw new NotFoundException("Item не должен быть равен null");
         }
 
-
-        log.debug("BEFORE MAPPING - Incoming ItemDto - name: {}, description: {}, available: {}",
-                newItem.getName(), newItem.getDescription(), newItem.getAvailable());
-
-
-        if (newItem.getAvailable() == null) {
-            log.warn("Available is null in incoming DTO, setting to false");
-            newItem.setAvailable(false);
-        }
-
-
         Item item = ItemMapper.toItem(newItem);
+
+        if (item.getAvailable() == null) {
+            log.warn("Available is null in incoming DTO, setting to false");
+            item.setAvailable(false);
+        }
 
         if (newItem.getRequestId() != null) {
             ItemRequest request = itemRequestStorage.findById(newItem.getRequestId())
@@ -66,20 +59,8 @@ public class ItemServiceImpl implements ItemService {
             item.setRequest(request);
         }
 
-
-        if (item.getAvailable() == null) {
-            log.error("CRITICAL: Item available is still null after mapping! Forcing to false.");
-            item.setAvailable(false);
-        }
-
-
-        log.debug("AFTER MAPPING - Item available: {}", item.getAvailable());
-
         item.setOwner(owner);
         Item savedItem = itemStorage.save(item);
-
-
-        log.debug("AFTER SAVE - Saved Item available: {}", savedItem.getAvailable());
 
         return ItemMapper.toItemDto(savedItem);
     }
@@ -234,10 +215,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<ItemDto> search(String text) {
         log.info("Поиск вещей по тексту: '{}'", text);
-        if (text == null || text.trim().isEmpty()) {
-            log.debug("Пустой поисковый запрос, возвращен пустой список");
-            return Collections.emptyList();
-        }
         String searchText = text.toLowerCase();
         Collection<Item> items = itemStorage.search(searchText);
         log.debug("Найдено {} вещей по запросу: '{}'", items.size(), text);

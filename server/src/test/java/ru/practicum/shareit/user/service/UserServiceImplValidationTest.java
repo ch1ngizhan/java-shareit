@@ -4,12 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.practicum.shareit.exception.NotUniqueEmailException;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -22,30 +20,6 @@ class UserServiceImplValidationTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    @Test
-    void createUser_InvalidEmailFormat_ShouldThrowException() {
-        // Подготовка
-        UserDto userDto;
-        userDto = UserDto.builder()
-                .name("Тестовый пользователь")
-                .email("неправильный-email") // Неверный формат
-                .build();
-
-        // Проверка
-        assertThrows(NotUniqueEmailException.class, () -> userService.create(userDto));
-    }
-
-    @Test
-    void createUser_EmptyEmail_ShouldThrowException() {
-        // Подготовка
-        UserDto userDto = UserDto.builder()
-                .name("Тестовый пользователь")
-                .email("") // Пустой email
-                .build();
-
-        // Проверка
-        assertThrows(NotUniqueEmailException.class, () -> userService.create(userDto));
-    }
 
     @Test
     void updateUser_EmptyName_ShouldNotUpdate() {
